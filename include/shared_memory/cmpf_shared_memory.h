@@ -1,9 +1,8 @@
 #ifndef CMPF_SHARED_MEMORY_H
 #define CMPF_SHARED_MEMORY_H
 
-#include "../cmpf.h"
-#include "../log/cmpf_log.h"
-#include "../utils/cmpf_utils.h"
+#include "log/cmpf_log.h"
+#include "utils/cmpf_utils.h"
 
 #ifdef CMPF_PLATFORM_WINDOWS
 #include <windows.h>
