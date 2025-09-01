@@ -1,4 +1,4 @@
-#include "../../include/log/cmpf_log.h"
+#include "log/cmpf_log.h"
 #include <iostream>
 
 void log_stub()

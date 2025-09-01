@@ -1,4 +1,4 @@
-#include "../../include/core/cmpf_core.h"
+#include "core/cmpf_core.h"
 #include <iostream>
 
 void core_stub()
