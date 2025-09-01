@@ -1,0 +1,15 @@
+# 统一文本文件行结束符为LF
+* text=auto eol=lf
+
+# 特定文件类型例外规则
+*.bat text eol=crlf
+*.cmd text eol=crlf
+*.sln text eol=crlf
+*.vcxproj text eol=crlf
+
+# 二进制文件不转换
+*.png binary
+*.jpg binary
+*.dll binary
+*.lib binary
+*.exp binary

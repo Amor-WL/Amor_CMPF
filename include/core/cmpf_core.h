@@ -5,7 +5,8 @@
 extern "C" {
 #endif
 
-// 这里可以添加未来的日志模块声明
+// 这里可以添加未来的核心模块声明
+__declspec(dllexport) void core_stub();
 
 #ifdef __cplusplus
 }
