@@ -11,9 +11,9 @@ cmake .. -DCMAKE_BUILD_TYPE=Release
 make
 
 # 如果编译成功，运行测试
-if [ -f test_amor ]; then
+if [ -f test_cmpf ]; then
     echo "Running test..."
-    ./test_amor
+    ./test_cmpf
 fi
 
 cd ..

@@ -5,7 +5,9 @@
 extern "C" {
 #endif
 
-// 这里可以添加未来的工具函数声明
+__declspec(dllexport) void process_stub();
+
+// 这里可以添加未来的进程模块声明
 
 #ifdef __cplusplus
 }

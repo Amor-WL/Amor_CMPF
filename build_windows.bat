@@ -39,7 +39,7 @@ REM Set environment variables for UTF-8 encoding
 
  REM Run CMake to generate Visual Studio project with platform definition
  echo Running CMake to generate Visual Studio project...
- cmake .. -G "Visual Studio 17 2022" -A x64 -DCMAKE_CXX_FLAGS="/D _WIN32 /D AMOR_PLATFORM_WINDOWS /D WIN32_LEAN_AND_MEAN" -DCMAKE_VERBOSE_MAKEFILE=ON
+ cmake .. -G "Visual Studio 17 2022" -A x64 -DCMAKE_CXX_FLAGS="/D _WIN32 /D CMPF_PLATFORM_WINDOWS /D WIN32_LEAN_AND_MEAN" -DCMAKE_VERBOSE_MAKEFILE=ON
 if errorlevel 1 (
     echo CMake failed to generate project.
     exit /b 1

@@ -5,7 +5,9 @@
 extern "C" {
 #endif
 
-// 这里可以添加未来的核心模块声明
+__declspec(dllexport) void memory_stub();
+
+// 这里可以添加未来的内存模块声明
 
 #ifdef __cplusplus
 }
