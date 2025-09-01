@@ -42,8 +42,8 @@ add_subdirectory(src/shared_memory)
 add_subdirectory(src/utils)
 
 # 添加可执行文件子目录
-add_subdirectory(main/manager)
-add_subdirectory(main/worker)
+add_subdirectory(src/main/manager)
+add_subdirectory(src/main/worker)
 
 # 安装规则
 install(TARGETS cmpf_core cmpf_log cmpf_memory cmpf_process cmpf_shared_memory cmpf_utils manager worker
