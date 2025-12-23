@@ -9,25 +9,11 @@ set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
 
 # 设置C++标准
-set(CMAKE_CXX_STANDARD 11)
+set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 # 配置编译选项
-if(MSVC)
-    # Windows平台编译选项
-    add_compile_options(/W4 /WX /EHsc /source-charset:utf-8 /execution-charset:utf-8)
-    # 禁用特定警告
-    add_compile_options(/wd4819)
-else()
-    # Linux平台编译选项
-    add_compile_options(-Wall -Wextra -Werror -std=c++11)
-endif()
-
-# 定义宏，用于导出API和平台检测
-add_definitions(-DCMPF_BUILD)
-if(MSVC)
-    add_definitions(-D_WIN32 -DCMPF_PLATFORM_WINDOWS)
-endif()
+add_compile_options(-Wall -Wextra -Werror -std=c++17)
 
 # 包含头文件目录
 link_directories(${CMAKE_BINARY_DIR}/lib/Release)
