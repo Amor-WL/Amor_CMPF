@@ -4,6 +4,9 @@
 # VSCode配置
 .vscode/
 
+# Trae目录
+.trae/
+
 # 临时文件
 *.tmp
 *.temp
