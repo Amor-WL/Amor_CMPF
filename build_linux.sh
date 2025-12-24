@@ -8,6 +8,7 @@ show_help() {
     echo "  -t    Compile test cases (currently not implemented)"
     echo "  -c    Clean the output directory"
     echo "  -C    Clean the build directory"
+    echo "  -d    Deploy to specified directory after compilation"
     echo ""
     echo "Without options, the script will compile all subprojects by default."
 }
@@ -15,8 +16,9 @@ show_help() {
 # 解析命令行参数
 clean_output=false
 clean_build=false
+deploy_dir=""
 
-while getopts "htcC" opt; do
+while getopts "htcCd:" opt; do
     case $opt in
         h) 
             show_help
@@ -32,6 +34,9 @@ while getopts "htcC" opt; do
             ;;
         C) 
             clean_build=true
+            ;;
+        d) 
+            deploy_dir="$OPTARG"
             ;;
         *) 
             show_help
@@ -68,4 +73,43 @@ if [ -f output/bin/test_cmpf ]; then
 fi
 
 cd ..
+
+# 部署逻辑
+if [ -n "$deploy_dir" ]; then
+    echo "Deploying to $deploy_dir..."
+    
+    # 检查目录是否存在
+    if [ ! -d "$deploy_dir" ]; then
+        echo "Error: Deployment directory $deploy_dir does not exist."
+        exit 1
+    fi
+    
+    # 创建必要的目录结构
+    mkdir -p "$deploy_dir/bin"
+    mkdir -p "$deploy_dir/lib"
+    mkdir -p "$deploy_dir/service"
+    
+    # 复制二进制文件（保留bin与lib目录结构）
+    if [ -d "build/output/bin" ]; then
+        cp -r "build/output/bin/"* "$deploy_dir/bin/"
+    fi
+    
+    if [ -d "build/output/lib" ]; then
+        cp -r "build/output/lib/"* "$deploy_dir/lib/"
+    fi
+    
+    # 复制scripts目录下的service后缀文件与target后缀文件到service目录
+    if [ -d "scripts" ]; then
+        cp -f "scripts/"*.service "$deploy_dir/service/" 2>/dev/null || true
+        cp -f "scripts/"*.target "$deploy_dir/service/" 2>/dev/null || true
+    fi
+    
+    # 复制scripts目录下的sh后缀文件到目标路径
+    if [ -d "scripts" ]; then
+        cp -f "scripts/"*.sh "$deploy_dir/" 2>/dev/null || true
+    fi
+    
+    echo "Deployment completed successfully."
+fi
+
 echo "Build completed."

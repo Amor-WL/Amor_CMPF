@@ -1,0 +1,22 @@
+[Unit]
+Description=CMPF manager
+After=network.target
+Requires=network.target
+
+[Service]
+Type=notify
+ExecStart=/path/to/manager
+NotifyAccess=main
+Restart=on-failure
+RestartSec=3
+TimeoutStartSec=15
+# 资源/权限配置
+CPUQuota=50%
+MemoryLimit=1G
+User=cmpf
+Group=cmpf
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target
