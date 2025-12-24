@@ -6,10 +6,7 @@ file(GLOB WORKER_SOURCES "*.cpp")
 # 创建worker可执行文件
 add_executable(worker ${WORKER_SOURCES})
 
-# 设置输出目录
-set_target_properties(worker PROPERTIES
-    RUNTIME_OUTPUT_DIRECTORY_Release "${CMAKE_BINARY_DIR}/bin/Release"
-)
+
 
 # worker可执行文件依赖所有模块
 target_link_libraries(worker
