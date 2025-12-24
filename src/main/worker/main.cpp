@@ -7,11 +7,11 @@
 #include "utils/cmpf_utils.h"
 
 // 声明外部函数
-extern "C" void log_stub();
-extern "C" void memory_stub();
-extern "C" void process_stub();
-extern "C" void shared_memory_stub();
-extern "C" void utils_stub();
+void log_stub();
+void memory_stub();
+void process_stub();
+void shared_memory_stub();
+void utils_stub();
 
 int main() {
     std::cout << "Worker started" << std::endl;

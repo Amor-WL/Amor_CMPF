@@ -6,10 +6,7 @@ file(GLOB MANAGER_SOURCES "*.cpp")
 # 创建manager可执行文件
 add_executable(manager ${MANAGER_SOURCES})
 
-# 设置输出目录
-set_target_properties(manager PROPERTIES
-    RUNTIME_OUTPUT_DIRECTORY_Release "${CMAKE_BINARY_DIR}/bin/Release"
-)
+
 
 # manager可执行文件依赖所有模块
 target_link_libraries(manager
