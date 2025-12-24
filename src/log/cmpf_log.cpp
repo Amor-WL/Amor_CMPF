@@ -3,6 +3,7 @@
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
+#include <cstdarg>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <unistd.h>
@@ -77,6 +78,28 @@ void Logger::write(const char* message) {
     strftime(time_str, sizeof(time_str), "%Y-%m-%d %H:%M:%S", &tstruct);
     fprintf(m_file, "[%s] %s\n", time_str, message);
     fflush(m_file);
+}
+
+void Logger::writef(const char* format, ...) {
+    if (!m_initialized || m_file == nullptr) {
+        va_list args;
+        va_start(args, format);
+        std::cerr << "Logger not initialized, cannot write log: ";
+        vfprintf(stderr, format, args);
+        std::cerr << std::endl;
+        va_end(args);
+        return;
+    }
+
+    // 创建缓冲区来存储格式化后的字符串
+    char buffer[1024];
+    va_list args;
+    va_start(args, format);
+    vsnprintf(buffer, sizeof(buffer), format, args);
+    va_end(args);
+
+    // 调用write方法来输出日志
+    write(buffer);
 }
 
 // 定义全局日志对象

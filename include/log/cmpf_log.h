@@ -8,6 +8,7 @@ public:
     
     void init();
     void write(const char* message);
+    void writef(const char* format, ...);
     
 private:
     bool m_initialized;

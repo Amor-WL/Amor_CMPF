@@ -15,6 +15,7 @@ target_link_libraries(manager
         cmpf_process
         cmpf_shared_memory
         cmpf_utils
+        systemd
 )
 
 # 安装规则
