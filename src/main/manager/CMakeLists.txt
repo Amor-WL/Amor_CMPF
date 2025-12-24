@@ -6,8 +6,6 @@ file(GLOB MANAGER_SOURCES "*.cpp")
 # 创建manager可执行文件
 add_executable(manager ${MANAGER_SOURCES})
 
-
-
 # manager可执行文件依赖所有模块
 target_link_libraries(manager
     PRIVATE

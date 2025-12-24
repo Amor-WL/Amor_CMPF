@@ -1,4 +1,6 @@
 #include <iostream>
+#include <sys/epoll.h>
+#include <unistd.h>
 #include "core/cmpf_core.h"
 #include "log/cmpf_log.h"
 #include "memory/cmpf_memory.h"
@@ -6,7 +8,6 @@
 #include "shared_memory/cmpf_shared_memory.h"
 #include "utils/cmpf_utils.h"
 
-// 声明外部函数
 void log_stub();
 void memory_stub();
 void process_stub();
@@ -14,17 +15,36 @@ void shared_memory_stub();
 void utils_stub();
 
 int main() {
-    std::cout << "Manager started" << std::endl;
+    // 初始化日志
+    g_logger.init();
+    g_logger.write("Manager process started");
     
-    // 调用各个模块的函数以验证链接
-    log_stub();
-    memory_stub();
-    process_stub();
-    shared_memory_stub();
-    utils_stub();
+    // 创建epoll实例
+    int epoll_fd = epoll_create1(0);
+    if (epoll_fd == -1) {
+        g_logger.write("Failed to create epoll instance");
+        return 1;
+    }
     
-    std::cout << "Manager finished" << std::endl;
-    std::cout << "Press any key to exit..." << std::endl;
-    std::cin.get();
+    // 注册信号处理（可选）
+    // struct epoll_event event;
+    struct epoll_event events[10];
+    
+    // 进入epoll循环，阻塞等待事件
+    g_logger.write("Manager entering epoll loop");
+    while (true) {
+        int nfds = epoll_wait(epoll_fd, events, 10, -1);
+        if (nfds == -1) {
+            g_logger.write("Epoll wait error");
+            break;
+        }
+        
+        // 处理事件（目前为空，仅用于阻塞）
+    }
+    
+    // 关闭epoll
+    close(epoll_fd);
+    
+    g_logger.write("Manager process exiting");
     return 0;
 }
