@@ -7,3 +7,5 @@ libsystemd-dev
 cmake >= 3.10
 make
 g++ >= 8.0
+
+# sudo apt install systemd-coredump

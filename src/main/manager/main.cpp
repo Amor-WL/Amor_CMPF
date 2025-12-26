@@ -2,12 +2,16 @@
 #include <sys/epoll.h>
 #include <unistd.h>
 #include <systemd/sd-daemon.h>
+#include <vector>
+#include <string>
+#include <cstdlib>
 #include "core/cmpf_core.h"
 #include "log/cmpf_log.h"
 #include "memory/cmpf_memory.h"
 #include "process/cmpf_process.h"
 #include "shared_memory/cmpf_shared_memory.h"
 #include "utils/cmpf_utils.h"
+#include "config/cmpf_config.h"
 
 void log_stub();
 void memory_stub();
@@ -26,6 +30,37 @@ int main(int argc, char* argv[]) {
     g_logger.init();
     g_logger.writef("Manager process started with instance_id: %d", instance_id);
     g_logger.writef("Manager process started");
+    
+    // 加载配置文件
+    bool config_result = g_config.init("/opt/cmpf/config/cmpf.conf");
+    if (!config_result) {
+        g_logger.writef("Failed to load config file, using default settings");
+    }
+    
+    // 获取worker数量，默认值为2
+    int worker_count = g_config.get_int("worker.count", 2);
+    g_logger.writef("Worker count configured: %d", worker_count);
+    
+    // 启动worker进程
+    std::vector<pid_t> worker_pids;
+    for (int i = 1; i <= worker_count; i++) {
+        pid_t pid = fork();
+        if (pid == 0) {
+            // 子进程 - 启动worker
+            std::string worker_id = std::to_string(i);
+            execlp("/usr/bin/cmpf_worker", "cmpf_worker", worker_id.c_str(), nullptr);
+            // 如果execlp返回，说明出错了
+            g_logger.writef("Failed to start worker %d", i);
+            exit(1);
+        } else if (pid > 0) {
+            // 父进程 - 记录worker PID
+            worker_pids.push_back(pid);
+            g_logger.writef("Started worker %d with PID: %d", i, pid);
+        } else {
+            // fork失败
+            g_logger.writef("Failed to fork worker %d", i);
+        }
+    }
     
     // 通知systemd服务已启动
     sd_notify(0, "READY=1");

@@ -109,6 +109,11 @@ if [ -n "$deploy_dir" ]; then
         cp -f "scripts/"*.sh "$deploy_dir/" 2>/dev/null || true
     fi
     
+    # 复制配置文件到目标路径
+    if [ -f "scripts/cmpf.conf" ]; then
+        cp -f "scripts/cmpf.conf" "$deploy_dir/" 2>/dev/null || true
+    fi
+    
     echo "Deployment completed successfully."
 fi
 

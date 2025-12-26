@@ -26,6 +26,7 @@ add_subdirectory(src/memory)
 add_subdirectory(src/process)
 add_subdirectory(src/shared_memory)
 add_subdirectory(src/utils)
+add_subdirectory(src/config)
 
 # 添加可执行文件子目录
 add_subdirectory(src/main/manager)

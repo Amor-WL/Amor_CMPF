@@ -1,12 +1,12 @@
 [Unit]
 Description=CMPF manager
 After=network.target
-Requires=network.target
+Wants=network.target
 
 [Service]
-Type=notify
-ExecStart=/path/to/manager
-NotifyAccess=main
+Type=simple
+ExecStart=LD_LIBRARY_PATH=/opt/cmpf/lib /opt/cmpf/bin/manager
+WorkingDirectory=/opt/cmpf
 Restart=on-failure
 RestartSec=3
 TimeoutStartSec=15
@@ -17,6 +17,7 @@ User=cmpf
 Group=cmpf
 StandardOutput=journal
 StandardError=journal
+KillMode=control-group
 
 [Install]
 WantedBy=multi-user.target
