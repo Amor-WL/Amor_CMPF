@@ -1,6 +1,13 @@
 /* Empty file */
-#pragma once
+#ifndef CMPF_MEMORY_H_
+#define CMPF_MEMORY_H_
 
-void memory_stub();
+namespace cmpf {
+
+void MemoryStub();
+
+} // namespace cmpf
 
 // 这里可以添加未来的内存模块声明
+
+#endif // CMPF_MEMORY_H_

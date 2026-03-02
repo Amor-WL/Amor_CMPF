@@ -7,6 +7,9 @@
 # Trae目录
 .trae/
 
+# 运行/调试目录
+run_space/
+
 # 临时文件
 *.tmp
 *.temp

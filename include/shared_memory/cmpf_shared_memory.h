@@ -1,10 +1,14 @@
-#ifndef CMPF_SHARED_MEMORY_H
-#define CMPF_SHARED_MEMORY_H
+#ifndef CMPF_SHARED_MEMORY_H_
+#define CMPF_SHARED_MEMORY_H_
 
 #include "log/cmpf_log.h"
 #include "utils/cmpf_utils.h"
 
-// 共享内存API
-void shared_memory_stub();
+namespace cmpf {
 
-#endif // CMPF_SHARED_MEMORY_H
+// 共享内存API
+void SharedMemoryStub();
+
+} // namespace cmpf
+
+#endif // CMPF_SHARED_MEMORY_H_

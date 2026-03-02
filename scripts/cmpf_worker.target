@@ -1,8 +1,0 @@
-[Unit]
-Description=CMPF worker target
-After=cmpf_manager.service
-Requires=cmpf_manager.service  # Manager 就绪后启动该 Target
-PartOf=cmpf_manager.service    # 停止 Manager 时自动停止所有 Worker
-
-[Install]
-WantedBy=cmpf_manager.service

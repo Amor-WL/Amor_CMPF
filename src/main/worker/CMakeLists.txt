@@ -15,6 +15,7 @@ target_link_libraries(worker
         cmpf_process
         cmpf_shared_memory
         cmpf_utils
+        cmpf_config
         systemd
 )
 

@@ -1,6 +1,10 @@
 #include "memory/cmpf_memory.h"
 
-void memory_stub()
+namespace cmpf {
+
+void MemoryStub()
 {
     return;
 }
+
+} // namespace cmpf

@@ -1,6 +1,10 @@
 #include "process/cmpf_process.h"
 
-void process_stub()
+namespace cmpf {
+
+void ProcessStub()
 {
     return;
 }
+
+} // namespace cmpf
