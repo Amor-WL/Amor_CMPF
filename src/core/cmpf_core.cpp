@@ -1,8 +1,10 @@
 #include "core/cmpf_core.h"
-#include <iostream>
 
-void core_stub()
+namespace cmpf {
+
+void CoreStub()
 {
-    std::cout << "cmpf_core stub" << std::endl;
     return;
 }
+
+} // namespace cmpf

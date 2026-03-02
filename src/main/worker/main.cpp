@@ -1,7 +1,17 @@
-#include <iostream>
-#include <sys/epoll.h>
-#include <unistd.h>
-#include <systemd/sd-daemon.h>
+// Copyright 2026 CMPF Project
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 #include "core/cmpf_core.h"
 #include "log/cmpf_log.h"
 #include "memory/cmpf_memory.h"
@@ -10,12 +20,20 @@
 #include "utils/cmpf_utils.h"
 #include "config/cmpf_config.h"
 
+#include <sys/epoll.h>
+#include <unistd.h>
+#include <systemd/sd-daemon.h>
+
+namespace cmpf {
+
 // 声明外部函数
-void log_stub();
-void memory_stub();
-void process_stub();
-void shared_memory_stub();
-void utils_stub();
+void LogStub();
+void MemoryStub();
+void ProcessStub();
+void SharedMemoryStub();
+void UtilsStub();
+
+} // namespace cmpf
 
 int main(int argc, char* argv[]) {
     // 获取实例id，默认为1
@@ -25,21 +43,21 @@ int main(int argc, char* argv[]) {
     }
     
     // 加载配置文件
-    bool config_result = g_config.init("/opt/cmpf/config/cmpf.conf");
+    bool config_result = cmpf::GetConfig().init("/opt/cmpf/config/cmpf.conf");
     if (!config_result) {
-        std::cerr << "Failed to load config file, using default settings" << std::endl;
+        cmpf::GetLogger().write("Failed to load config file, using default settings");
     }
     
     // 读取日志目录配置
-    std::string log_dir_str = g_config.get_string("worker.log.dir", "log");
+    std::string log_dir_str = cmpf::GetConfig().get_string("worker.log.dir", "log");
     const char* log_dir = log_dir_str.c_str();
     
     // 初始化日志
-    g_logger.init(log_dir);
-    g_logger.writef("Worker process started with instance_id: %d", instance_id);
-    g_logger.writef("Worker process started");
+    cmpf::GetLogger().init(log_dir);
+    cmpf::GetLogger().writef("Worker process started with instance_id: %d", instance_id);
+    cmpf::GetLogger().writef("Worker process started");
     if (!config_result) {
-        g_logger.writef("Failed to load config file, using default settings");
+        cmpf::GetLogger().writef("Failed to load config file, using default settings");
     }
     
     // 通知systemd服务已启动
@@ -48,7 +66,7 @@ int main(int argc, char* argv[]) {
     // 创建epoll实例
     int epoll_fd = epoll_create1(0);
     if (epoll_fd == -1) {
-        g_logger.writef("Failed to create epoll instance");
+        cmpf::GetLogger().writef("Failed to create epoll instance");
         return 1;
     }
     
@@ -56,11 +74,11 @@ int main(int argc, char* argv[]) {
     struct epoll_event events[10];
     
     // 进入epoll循环，阻塞等待事件
-    g_logger.writef("Worker entering epoll loop");
+    cmpf::GetLogger().writef("Worker entering epoll loop");
     while (true) {
         int nfds = epoll_wait(epoll_fd, events, 10, -1);
         if (nfds == -1) {
-            g_logger.writef("Epoll wait error");
+            cmpf::GetLogger().writef("Epoll wait error");
             break;
         }
         
@@ -70,6 +88,6 @@ int main(int argc, char* argv[]) {
     // 关闭epoll
     close(epoll_fd);
     
-    g_logger.writef("Worker process exiting");
+    cmpf::GetLogger().writef("Worker process exiting");
     return 0;
 }

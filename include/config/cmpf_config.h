@@ -1,13 +1,15 @@
-#ifndef CMPF_CONFIG_H
-#define CMPF_CONFIG_H
+#ifndef CMPF_CONFIG_H_
+#define CMPF_CONFIG_H_
 
 #include <string>
 #include <unordered_map>
 
-class CMPFConfig {
+namespace cmpf {
+
+class CmpfConfig {
 public:
-    CMPFConfig();
-    ~CMPFConfig();
+    CmpfConfig();
+    ~CmpfConfig();
     
     // 初始化配置
     bool init(const std::string& config_path);
@@ -22,13 +24,15 @@ public:
     bool get_bool(const std::string& key, bool default_value = false) const;
     
 private:
-    std::unordered_map<std::string, std::string> m_config;
+    std::unordered_map<std::string, std::string> config_;
     
     // 解析配置文件
     bool parse_config(const std::string& config_path);
 };
 
-// 全局配置对象
-extern CMPFConfig g_config;
+// 获取配置对象
+CmpfConfig& GetConfig();
 
-#endif // CMPF_CONFIG_H
+} // namespace cmpf
+
+#endif // CMPF_CONFIG_H_

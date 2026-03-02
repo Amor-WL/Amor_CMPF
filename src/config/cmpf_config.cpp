@@ -4,41 +4,49 @@
 #include <algorithm>
 #include <cctype>
 
-CMPFConfig g_config;
+namespace cmpf {
 
-CMPFConfig::CMPFConfig() {
+// 获取配置对象
+CmpfConfig& GetConfig() {
+    static CmpfConfig* config = new CmpfConfig();
+    return *config;
 }
 
-CMPFConfig::~CMPFConfig() {
+CmpfConfig::CmpfConfig() {
 }
 
-bool CMPFConfig::init(const std::string& config_path) {
+CmpfConfig::~CmpfConfig() {
+}
+
+bool CmpfConfig::init(const std::string& config_path) {
     return parse_config(config_path);
 }
 
-int CMPFConfig::get_int(const std::string& key, int default_value) const {
-    auto it = m_config.find(key);
-    if (it != m_config.end()) {
-        try {
-            return std::stoi(it->second);
-        } catch (...) {
-            return default_value;
+int CmpfConfig::get_int(const std::string& key, int default_value) const {
+    auto it = config_.find(key);
+    if (it != config_.end()) {
+        // 避免使用异常，使用更安全的转换方式
+        char* end_ptr = nullptr;
+        long value = std::strtol(it->second.c_str(), &end_ptr, 10);
+        if (*end_ptr == '\0') {
+            return static_cast<int>(value);
         }
+        return default_value;
     }
     return default_value;
 }
 
-std::string CMPFConfig::get_string(const std::string& key, const std::string& default_value) const {
-    auto it = m_config.find(key);
-    if (it != m_config.end()) {
+std::string CmpfConfig::get_string(const std::string& key, const std::string& default_value) const {
+    auto it = config_.find(key);
+    if (it != config_.end()) {
         return it->second;
     }
     return default_value;
 }
 
-bool CMPFConfig::get_bool(const std::string& key, bool default_value) const {
-    auto it = m_config.find(key);
-    if (it != m_config.end()) {
+bool CmpfConfig::get_bool(const std::string& key, bool default_value) const {
+    auto it = config_.find(key);
+    if (it != config_.end()) {
         std::string value = it->second;
         std::transform(value.begin(), value.end(), value.begin(), ::tolower);
         if (value == "true" || value == "1" || value == "yes") {
@@ -50,7 +58,7 @@ bool CMPFConfig::get_bool(const std::string& key, bool default_value) const {
     return default_value;
 }
 
-bool CMPFConfig::parse_config(const std::string& config_path) {
+bool CmpfConfig::parse_config(const std::string& config_path) {
     std::ifstream file(config_path);
     if (!file.is_open()) {
         return false;
@@ -91,7 +99,7 @@ bool CMPFConfig::parse_config(const std::string& config_path) {
         // 去除value的首尾空格
         first_non_space = value.find_first_not_of(" \t\n\r");
         if (first_non_space == std::string::npos) {
-            m_config[key] = "";
+            config_[key] = "";
             continue;
         }
         value = value.substr(first_non_space);
@@ -102,9 +110,11 @@ bool CMPFConfig::parse_config(const std::string& config_path) {
         }
         
         // 存储配置
-        m_config[key] = value;
+        config_[key] = value;
     }
     
     file.close();
     return true;
 }
+
+} // namespace cmpf
