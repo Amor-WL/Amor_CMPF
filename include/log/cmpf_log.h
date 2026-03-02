@@ -7,6 +7,7 @@ public:
     ~Logger();
     
     void init();
+    void init(const char* log_dir);
     void write(const char* message);
     void writef(const char* format, ...);
     

@@ -22,12 +22,22 @@ Logger::~Logger() {
 }
 
 void Logger::init() {
+    init("log");
+}
+
+void Logger::init(const char* log_dir) {
     if (m_initialized) {
         return;
     }
 
-    // 创建log文件夹
-    mkdir("log", 0755);
+    // 检查并创建日志目录
+    struct stat st;
+    if (stat(log_dir, &st) == -1) {
+        if (mkdir(log_dir, 0755) == -1) {
+            std::cerr << "Failed to create log directory: " << log_dir << std::endl;
+            return;
+        }
+    }
     
     // 获取pid
     pid_t pid = getpid();
@@ -47,7 +57,7 @@ void Logger::init() {
     
     // 创建日志文件名
     char log_filename[256];
-    snprintf(log_filename, sizeof(log_filename), "log/%d_%s.log", pid, name);
+    snprintf(log_filename, sizeof(log_filename), "%s/%d_%s.log", log_dir, pid, name);
     
     // 打开日志文件
     m_file = fopen(log_filename, "a");
@@ -57,7 +67,7 @@ void Logger::init() {
         struct tm tstruct = *localtime(&now);
         char time_str[80];
         strftime(time_str, sizeof(time_str), "%Y-%m-%d %H:%M:%S", &tstruct);
-        fprintf(m_file, "[%s] Log initialized for process %d (%s)\n", time_str, pid, name);
+        fprintf(m_file, "[%s] Log initialized for process %d (%s) in directory %s\n", time_str, pid, name, log_dir);
         fflush(m_file);
         m_initialized = true;
     } else {

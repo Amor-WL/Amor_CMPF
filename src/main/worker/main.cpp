@@ -8,6 +8,7 @@
 #include "process/cmpf_process.h"
 #include "shared_memory/cmpf_shared_memory.h"
 #include "utils/cmpf_utils.h"
+#include "config/cmpf_config.h"
 
 // 声明外部函数
 void log_stub();
@@ -23,12 +24,23 @@ int main(int argc, char* argv[]) {
         instance_id = std::atoi(argv[1]);
     }
     
-    // 打印日志
-    g_logger.init();
-    g_logger.writef("Worker process started with instance_id: %d", instance_id);
+    // 加载配置文件
+    bool config_result = g_config.init("/opt/cmpf/config/cmpf.conf");
+    if (!config_result) {
+        std::cerr << "Failed to load config file, using default settings" << std::endl;
+    }
+    
+    // 读取日志目录配置
+    std::string log_dir_str = g_config.get_string("worker.log.dir", "log");
+    const char* log_dir = log_dir_str.c_str();
+    
     // 初始化日志
-    g_logger.init();
+    g_logger.init(log_dir);
+    g_logger.writef("Worker process started with instance_id: %d", instance_id);
     g_logger.writef("Worker process started");
+    if (!config_result) {
+        g_logger.writef("Failed to load config file, using default settings");
+    }
     
     // 通知systemd服务已启动
     sd_notify(0, "READY=1");

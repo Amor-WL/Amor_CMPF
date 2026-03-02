@@ -13,7 +13,7 @@ CMPF（Common Multi-Process Framework, 通用多进程框架）是一个基于C+
 # 编译工程
 编译的统一入口为build_linux.sh
 一般使用如下命令执行编译与部署：
-./build_linux.sh -d /home/amor/code/cmpf_dev_1/Amor_CMPF/run_space
+./build_linux.sh -d ./run_space
 cd run_space
 sudo ./start_service.sh
 

@@ -2,7 +2,7 @@
 
 # 定义变量
 SCRIPT_DIR="$(dirname "$0")"
-SERVICE_DIR="$SCRIPT_DIR"
+SERVICE_DIR="$SCRIPT_DIR/service"
 LIB_DIR="$(pwd)/lib"
 BIN_DIR="$(pwd)/bin"
 SYSTEMD_DIR="/usr/lib/systemd/system"
