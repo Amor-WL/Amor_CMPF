@@ -35,12 +35,11 @@ run_space/
 
 # 框架整体部署架构
 当前的项目是个多进程框架，worker模型。使用systemd进行部署管理。
-1. 二进制文件：manager、worker各一个。libcmpf_xxx.so等模块动态链接文件若干。
+1. 二进制文件：manager、worker、agent各一个。libcmpf_xxx.so等模块动态链接文件若干。
 2. 进程：manager一个，agent一个，worker可能有多个（进程名worker_1, worker_2），worker数量由配置文件决定。
-3. 依赖关系：worker依赖manager
-4. 所有进程都被systemd管理。
-5. worker负责具体的业务功能。manager只负责进程管理。
-6. 在manager中，负责订阅worker的进程信息，在内部有自己的状态机。比如，当发现同一个worker号存在两个实例时，会杀死旧的。或者当worker重复重启超过15次则结束所有服务。负责类似的功能。（当前还未实现）
+3. manager进程被systemd管理，worker与agent进程被manager进程管理。
+4. worker负责具体的业务功能。manager只负责进程管理。agent负责配置管理，主要通过共享内存来发布配置。
+5. 在manager中，负责订阅worker的进程信息，在内部有自己的状态机。比如，当发现同一个worker号存在两个实例时，会杀死旧的。或者当worker重复重启超过15次则结束所有服务。负责类似的功能。（当前还未完全实现）
 
 # 代码规范
 本项目严格遵守Google C++代码规范，以确保代码的一致性、可读性和可维护性。
