@@ -6,7 +6,12 @@ file(GLOB CORE_SOURCES "*.cpp")
 # 创建core模块的动态库
 add_library(cmpf_core SHARED ${CORE_SOURCES})
 
-
+# core模块需要链接dl库，用于动态加载so文件
+target_link_libraries(cmpf_core
+    PRIVATE
+        dl
+        pthread
+)
 
 # core模块不需要依赖其他模块，因为它是基础模块
 

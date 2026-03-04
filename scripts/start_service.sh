@@ -45,6 +45,8 @@ create_user_group() {
 # 创建工作目录
 create_working_dir() {
     echo "正在创建工作目录..."
+    # 删除工作目录原有内容，避免污染
+    rm -rf "$WORKING_DIR"/*
     mkdir -p "$WORKING_DIR"
     mkdir -p "$WORKING_LIB_DIR"
     mkdir -p "$WORKING_BIN_DIR"
@@ -62,6 +64,51 @@ deploy_libs() {
     # 设置权限
     chown -R "$USER:$GROUP" "$WORKING_LIB_DIR"
     chmod -R 755 "$WORKING_LIB_DIR"
+    
+    # 创建cmpf_core目录，用于存放基础so的软链接
+    echo "正在创建cmpf_core目录..."
+    mkdir -p "$WORKING_DIR/cmpf_core"
+    
+    # 为基础so创建软链接到cmpf_core目录
+    echo "正在创建基础so软链接..."
+    # 当前只有util模块是基础模块
+    util_lib="$WORKING_LIB_DIR/libcmpf_utils.so"
+    if [ -f "$util_lib" ]; then
+        lib_name=$(basename "$util_lib")
+        ln -sf "$util_lib" "$WORKING_DIR/cmpf_core/$lib_name"
+        echo "已创建软链接: $WORKING_DIR/cmpf_core/$lib_name -> $util_lib"
+    fi
+    
+    # 创建manager和worker目录，用于存放对应的so软链接
+    echo "正在创建manager和worker目录..."
+    mkdir -p "$WORKING_DIR/manager"
+    mkdir -p "$WORKING_DIR/worker"
+    
+    # 为manager和worker模块创建软链接
+    echo "正在创建manager和worker模块软链接..."
+    manager_lib="$WORKING_LIB_DIR/libcmpf_manager.so"
+    if [ -f "$manager_lib" ]; then
+        lib_name=$(basename "$manager_lib")
+        ln -sf "$manager_lib" "$WORKING_DIR/manager/$lib_name"
+        echo "已创建软链接: $WORKING_DIR/manager/$lib_name -> $manager_lib"
+    fi
+    
+    worker_lib="$WORKING_LIB_DIR/libcmpf_worker.so"
+    if [ -f "$worker_lib" ]; then
+        lib_name=$(basename "$worker_lib")
+        ln -sf "$worker_lib" "$WORKING_DIR/worker/$lib_name"
+        echo "已创建软链接: $WORKING_DIR/worker/$lib_name -> $worker_lib"
+    fi
+    
+    # 设置目录权限
+    chown -R "$USER:$GROUP" "$WORKING_DIR/manager"
+    chown -R "$USER:$GROUP" "$WORKING_DIR/worker"
+    chmod -R 755 "$WORKING_DIR/manager"
+    chmod -R 755 "$WORKING_DIR/worker"
+    
+    # 设置目录权限
+    chown -R "$USER:$GROUP" "$WORKING_DIR/cmpf_core"
+    chmod -R 755 "$WORKING_DIR/cmpf_core"
 }
 
 # 部署二进制文件
@@ -143,12 +190,13 @@ main() {
             remove_libs
             ;;
         *)
+            # 最优先停止服务
+            stop_manager
             create_user_group
             create_working_dir
             deploy_libs
             deploy_binaries
             deploy_services
-            stop_manager
             start_manager
             ;;
     esac

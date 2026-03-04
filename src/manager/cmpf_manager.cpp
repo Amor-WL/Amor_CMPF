@@ -13,12 +13,9 @@
 // limitations under the License.
 
 #include "core/cmpf_core.h"
-#include "log/cmpf_log.h"
-#include "memory/cmpf_memory.h"
 #include "process/cmpf_process.h"
-#include "shared_memory/cmpf_shared_memory.h"
-#include "utils/cmpf_utils.h"
-#include "config/cmpf_config.h"
+#include "utils/config/cmpf_config.h"
+#include "utils/log/cmpf_log.h"
 
 #include <sys/epoll.h>
 #include <unistd.h>
@@ -28,6 +25,7 @@
 #include <cstdlib>
 #include <sys/wait.h>
 #include <map>
+#include <iostream>
 
 namespace cmpf {
 
@@ -38,12 +36,6 @@ struct WorkerInfo {
     int fail_count;
     bool running;
 };
-
-void LogStub();
-void MemoryStub();
-void ProcessStub();
-void SharedMemoryStub();
-void UtilsStub();
 
 // 初始化配置和日志
 void InitSystem(int instance_id) {
@@ -95,7 +87,7 @@ void StartWorker(WorkerInfo& info) {
         if (pid == 0) {
             // 子进程 - 启动worker
             std::string worker_id_str = std::to_string(info.id);
-            execlp("/opt/cmpf/bin/worker", "worker", worker_id_str.c_str(), nullptr);
+            execlp("/opt/cmpf/bin/cmpf_main", "cmpf_main", "worker", worker_id_str.c_str(), nullptr);
             // 如果execlp返回，说明出错了
             GetLogger().writef("Failed to start worker %d", info.id);
             exit(1);
@@ -137,40 +129,43 @@ void CheckWorkerStatus(std::map<int, WorkerInfo>& workers) {
     }
 }
 
-} // namespace cmpf
-
-int main(int argc, char* argv[]) {
-    // 获取实例id，默认为1
-    int instance_id = 1;
-    if (argc > 1) {
-        instance_id = std::atoi(argv[1]);
-    }
-    
+// manager主循环
+void ManagerMainLoop(int instance_id) {
     // 初始化系统
-    cmpf::InitSystem(instance_id);
+    InitSystem(instance_id);
     
     // 初始化worker信息
-    std::map<int, cmpf::WorkerInfo> workers = cmpf::InitWorkers();
+    std::map<int, WorkerInfo> workers = InitWorkers();
     
     // 通知systemd服务已启动
     sd_notify(0, "READY=1");
     
     // 进入主循环
-    cmpf::GetLogger().writef("Manager entering main loop");
+    GetLogger().writef("Manager entering main loop");
     while (true) {
         // 检查并启动/重启worker
         for (auto& pair : workers) {
-            cmpf::WorkerInfo& info = pair.second;
-            cmpf::StartWorker(info);
+            WorkerInfo& info = pair.second;
+            StartWorker(info);
         }
         
         // 检查worker进程状态
-        cmpf::CheckWorkerStatus(workers);
+        CheckWorkerStatus(workers);
         
         // 短暂睡眠，避免CPU占用过高
         usleep(100000); // 100ms
     }
+}
+
+} // namespace cmpf
+
+// 模块初始化函数
+extern "C" void InitModule() {
+    std::cout << "Initializing manager module" << std::endl;
     
-    cmpf::GetLogger().writef("Manager process exiting");
-    return 0;
+    // 注册manager主线程
+    cmpf::RegisterThread("manager", "manager_main", 1, []() {
+        // 传递默认实例ID 0
+        cmpf::ManagerMainLoop(0);
+    });
 }

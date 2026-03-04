@@ -84,6 +84,10 @@ if [ -n "$deploy_dir" ]; then
         exit 1
     fi
     
+    # 清理部署目录内容，避免污染
+    echo "Cleaning deployment directory..."
+    rm -rf "$deploy_dir/bin" "$deploy_dir/lib" "$deploy_dir/service" "$deploy_dir/start_service.sh" "$deploy_dir/cmpf.conf"
+    
     # 创建必要的目录结构
     mkdir -p "$deploy_dir/bin"
     mkdir -p "$deploy_dir/lib"

@@ -1,5 +1,5 @@
-#ifndef CMPF_CONFIG_H_
-#define CMPF_CONFIG_H_
+#ifndef CMPF_UTILS_CONFIG_H_
+#define CMPF_UTILS_CONFIG_H_
 
 #include <string>
 #include <unordered_map>
@@ -35,4 +35,4 @@ CmpfConfig& GetConfig();
 
 } // namespace cmpf
 
-#endif // CMPF_CONFIG_H_
+#endif // CMPF_UTILS_CONFIG_H_
