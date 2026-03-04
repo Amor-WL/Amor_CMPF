@@ -1,8 +1,8 @@
-#include "memory/cmpf_memory.h"
+#include "utils/shm/cmpf_shm.h"
 
 namespace cmpf {
 
-void MemoryStub()
+void ShmStub()
 {
     return;
 }

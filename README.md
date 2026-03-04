@@ -21,25 +21,58 @@ sudo ./start_service.sh
 在执行了上述的部署命令后，在部署路径下会生成以下文件：
 run_space/
 ├── bin/
-│   ├── manager
-│   ├── worker
+│   ├── cmpf_main
 ├── service/
 │   ├── cmpf_manager.service
 ├── lib/
-│   ├── libxxxxx.so
+│   ├── libcmpf_core.so
+│   ├── libcmpf_process.so
+│   ├── libcmpf_utils.so
+│   ├── libcmpf_manager.so
+│   ├── libcmpf_worker.so
 ├── start_service.sh
+├── cmpf.conf
 
 随后用户执行sudo ./start_service.sh脚本即可启动CMPF框架。
-该脚本会往systemd服务部署目录下拷贝service与target文件，随后将二进制文件部署到系统目录下。
-随后执行systemctl start命令启动manager服务，并期望通过target文件来启动worker服务。
+该脚本会往systemd服务部署目录下拷贝service文件，随后将二进制文件和库文件部署到系统目录下。
+随后执行systemctl start命令启动cmpf_manager服务，该服务使用cmpf_main二进制。
 
 # 框架整体部署架构
 当前的项目是个多进程框架，worker模型。使用systemd进行部署管理。
-1. 二进制文件：manager、worker、agent各一个。libcmpf_xxx.so等模块动态链接文件若干。
-2. 进程：manager一个，agent一个，worker可能有多个（进程名worker_1, worker_2），worker数量由配置文件决定。
-3. manager进程被systemd管理，worker与agent进程被manager进程管理。
-4. worker负责具体的业务功能。manager只负责进程管理。agent负责配置管理，主要通过共享内存来发布配置。
-5. 在manager中，负责订阅worker的进程信息，在内部有自己的状态机。比如，当发现同一个worker号存在两个实例时，会杀死旧的。或者当worker重复重启超过15次则结束所有服务。负责类似的功能。（当前还未完全实现）
+1. 二进制文件：只有cmpf_main一个统一入口。libcmpf_xxx.so等模块动态链接文件若干。
+2. 进程：manager一个，worker可能有多个（通过cmpf_main启动，指定不同的实例ID），worker数量由配置文件决定。
+3. manager进程被systemd管理，worker进程被manager进程管理。
+4. worker负责具体的业务功能。manager只负责进程管理。
+5. 在manager中，负责管理worker进程的生命周期，包括启动、监控和重启。当worker进程异常退出时，会自动重启；当worker重复重启超过15次时，会停止尝试重启。
+
+## 统一二进制入口
+本项目使用cmpf_main作为统一的二进制入口，通过命令行参数来指定实例类型和ID：
+- 启动manager实例：`cmpf_main manager`
+- 启动worker实例：`cmpf_main worker <worker_id>`
+
+这种设计简化了部署和管理，只需要维护一个二进制文件，而不是多个不同的二进制文件。
+
+## Core模块功能
+Core模块（libcmpf_core.so）是所有进程都需要加载的核心模块，定义了所有CMPF进程都应该执行的基本操作：
+
+1. **基础模块加载与初始化**：
+   - 在系统的/opt/cmpf/cmpf_core目录下，遍历所有的so文件，进行统一加载
+   - 该目录存放了所有需要加载的基础so的软链接，如libcmpf_utils.so
+
+2. **业务模块加载与初始化**：
+   - 在/opt/cmpf/"进程名"目录下，遍历所有的so文件，进行统一加载
+   - 该目录存放了所有需要加载的业务so的软链接，如libcmpf_manager.so和libcmpf_worker.so
+
+3. **业务线程管理**：
+   - 初始化、启动线程
+   - 在so加载步骤中，模块的InitModule函数会注册业务线程信息
+   - 按优先级进行线程的启动
+
+4. **实例管理**：
+   - 支持通过命令行参数指定实例类型和ID
+   - 根据实例类型加载对应的业务模块
+
+Core模块通过dlopen动态加载其他模块，实现了模块的热插拔和灵活配置。
 
 # 代码规范
 本项目严格遵守Google C++代码规范，以确保代码的一致性、可读性和可维护性。

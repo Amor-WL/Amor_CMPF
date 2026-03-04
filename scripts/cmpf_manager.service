@@ -6,7 +6,7 @@ Wants=network.target
 [Service]
 Type=simple
 Environment=LD_LIBRARY_PATH=/opt/cmpf/lib
-ExecStart=/opt/cmpf/bin/manager
+ExecStart=/opt/cmpf/bin/cmpf_main manager
 WorkingDirectory=/opt/cmpf
 Restart=on-failure
 RestartSec=3
