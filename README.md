@@ -13,12 +13,18 @@ CMPF（Common Multi-Process Framework, 通用多进程框架）是一个基于C+
 # 编译工程
 编译的统一入口为build_linux.sh
 一般使用如下命令执行编译与部署：
+
+```bash
+# 编译并部署到指定目录
 ./build_linux.sh -d ./run_space
 cd run_space
 sudo ./start_service.sh
+```
 
 # 执行
 在执行了上述的部署命令后，在部署路径下会生成以下文件：
+
+```plaintext
 run_space/
 ├── bin/
 │   ├── cmpf_main
@@ -32,6 +38,7 @@ run_space/
 │   ├── libcmpf_worker.so
 ├── start_service.sh
 ├── cmpf.conf
+```
 
 随后用户执行sudo ./start_service.sh脚本即可启动CMPF框架。
 该脚本会往systemd服务部署目录下拷贝service文件，随后将二进制文件和库文件部署到系统目录下。
