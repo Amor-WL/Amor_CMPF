@@ -1,5 +1,5 @@
-#ifndef CMPF_CORE_H_
-#define CMPF_CORE_H_
+#ifndef CMPF_INCLUDE_CORE_CMPF_CORE_H_
+#define CMPF_INCLUDE_CORE_CMPF_CORE_H_
 
 #include <string>
 #include <vector>
@@ -49,4 +49,4 @@ void RegisterThread(const std::string& module_name, const std::string& thread_na
 
 } // namespace cmpf
 
-#endif // CMPF_CORE_H_
+#endif // CMPF_INCLUDE_CORE_CMPF_CORE_H_

@@ -22,11 +22,11 @@ Logger::~Logger() {
     }
 }
 
-void Logger::init() {
-    init("log");
+void Logger::Init() {
+    Init("log");
 }
 
-void Logger::init(const char* log_dir) {
+void Logger::Init(const char* log_dir) {
     if (initialized_) {
         return;
     }
@@ -38,7 +38,7 @@ void Logger::init(const char* log_dir) {
             // 避免使用流输出
             char error_msg[256];
             snprintf(error_msg, sizeof(error_msg), "Failed to create log directory: %s\n", log_dir);
-            write(error_msg);
+            Write(error_msg);
             return;
         }
     }
@@ -78,11 +78,11 @@ void Logger::init(const char* log_dir) {
         // 避免使用流输出
         char error_msg[512];
         snprintf(error_msg, sizeof(error_msg), "Failed to open log file: %s\n", log_filename);
-        write(error_msg);
+        Write(error_msg);
     }
 }
 
-void Logger::write(const char* message) {
+void Logger::Write(const char* message) {
     if (!initialized_ || file_ == nullptr) {
         // 避免使用流输出
         char error_msg[256];
@@ -101,7 +101,7 @@ void Logger::write(const char* message) {
     fflush(file_);
 }
 
-void Logger::writef(const char* format, ...) {
+void Logger::Writef(const char* format, ...) {
     if (!initialized_ || file_ == nullptr) {
         va_list args;
         va_start(args, format);
@@ -120,8 +120,8 @@ void Logger::writef(const char* format, ...) {
     vsnprintf(buffer, sizeof(buffer), format, args);
     va_end(args);
 
-    // 调用write方法来输出日志
-    write(buffer);
+    // 调用Write方法来输出日志
+    Write(buffer);
 }
 
 // 获取日志对象
@@ -132,7 +132,7 @@ Logger& GetLogger() {
 
 void LogStub() {
     // 避免使用流输出
-    GetLogger().write("cmpf_log stub");
+    GetLogger().Write("cmpf_log stub");
     return;
 }
 

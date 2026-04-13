@@ -8,12 +8,10 @@ add_library(cmpf_process SHARED ${PROCESS_SOURCES})
 
 
 
-# process模块依赖core、log和memory模块
+# process模块依赖core模块
 target_link_libraries(cmpf_process
     PUBLIC
         cmpf_core
-        cmpf_log
-        cmpf_memory
 )
 
 # 安装规则

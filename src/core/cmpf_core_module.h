@@ -1,5 +1,5 @@
-#ifndef CMPF_CORE_MODULE_H_
-#define CMPF_CORE_MODULE_H_
+#ifndef CMPF_SRC_CORE_CMPF_CORE_MODULE_H_
+#define CMPF_SRC_CORE_CMPF_CORE_MODULE_H_
 
 #include <string>
 #include <vector>
@@ -95,4 +95,4 @@ typedef void (*InitFunc)();
 
 } // namespace cmpf
 
-#endif // CMPF_CORE_MODULE_H_
+#endif // CMPF_SRC_CORE_CMPF_CORE_MODULE_H_

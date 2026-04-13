@@ -1,5 +1,5 @@
-#ifndef CMPF_LOG_H_
-#define CMPF_LOG_H_
+#ifndef CMPF_INCLUDE_UTILS_LOG_CMPF_LOG_H_
+#define CMPF_INCLUDE_UTILS_LOG_CMPF_LOG_H_
 
 #include <cstdio>
 
@@ -10,10 +10,10 @@ public:
     Logger();
     ~Logger();
     
-    void init();
-    void init(const char* log_dir);
-    void write(const char* message);
-    void writef(const char* format, ...);
+    void Init();
+    void Init(const char* log_dir);
+    void Write(const char* message);
+    void Writef(const char* format, ...);
     
 private:
     bool initialized_;
@@ -29,4 +29,4 @@ void LogStub();
 
 // 这里可以添加未来的日志模块声明
 
-#endif // CMPF_LOG_H_
+#endif // CMPF_INCLUDE_UTILS_LOG_CMPF_LOG_H_

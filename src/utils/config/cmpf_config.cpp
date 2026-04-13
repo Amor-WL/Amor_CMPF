@@ -18,11 +18,11 @@ CmpfConfig::CmpfConfig() {
 CmpfConfig::~CmpfConfig() {
 }
 
-bool CmpfConfig::init(const std::string& config_path) {
-    return parse_config(config_path);
+bool CmpfConfig::Init(const std::string& config_path) {
+    return ParseConfig(config_path);
 }
 
-int CmpfConfig::get_int(const std::string& key, int default_value) const {
+int CmpfConfig::GetInt(const std::string& key, int default_value) const {
     auto it = config_.find(key);
     if (it != config_.end()) {
         // 避免使用异常，使用更安全的转换方式
@@ -36,7 +36,7 @@ int CmpfConfig::get_int(const std::string& key, int default_value) const {
     return default_value;
 }
 
-std::string CmpfConfig::get_string(const std::string& key, const std::string& default_value) const {
+std::string CmpfConfig::GetString(const std::string& key, const std::string& default_value) const {
     auto it = config_.find(key);
     if (it != config_.end()) {
         return it->second;
@@ -44,7 +44,7 @@ std::string CmpfConfig::get_string(const std::string& key, const std::string& de
     return default_value;
 }
 
-bool CmpfConfig::get_bool(const std::string& key, bool default_value) const {
+bool CmpfConfig::GetBool(const std::string& key, bool default_value) const {
     auto it = config_.find(key);
     if (it != config_.end()) {
         std::string value = it->second;
@@ -58,7 +58,7 @@ bool CmpfConfig::get_bool(const std::string& key, bool default_value) const {
     return default_value;
 }
 
-bool CmpfConfig::parse_config(const std::string& config_path) {
+bool CmpfConfig::ParseConfig(const std::string& config_path) {
     std::ifstream file(config_path);
     if (!file.is_open()) {
         return false;

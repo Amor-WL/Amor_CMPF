@@ -19,11 +19,11 @@
 
 #include <sys/epoll.h>
 #include <unistd.h>
+#include <cstdlib>
+#include <sys/wait.h>
 #include <systemd/sd-daemon.h>
 #include <vector>
 #include <string>
-#include <cstdlib>
-#include <sys/wait.h>
 #include <map>
 #include <iostream>
 
@@ -40,29 +40,29 @@ struct WorkerInfo {
 // 初始化配置和日志
 void InitSystem(int instance_id) {
     // 加载配置文件
-    bool config_result = GetConfig().init("/opt/cmpf/config/cmpf.conf");
+    bool config_result = GetConfig().Init("/opt/cmpf/config/cmpf.conf");
     if (!config_result) {
-        GetLogger().write("Failed to load config file, using default settings");
+        GetLogger().Write("Failed to load config file, using default settings");
     }
     
     // 读取日志目录配置
-    std::string log_dir_str = GetConfig().get_string("manager.log.dir", "log");
+    std::string log_dir_str = GetConfig().GetString("manager.log.dir", "log");
     const char* log_dir = log_dir_str.c_str();
     
     // 初始化日志
-    GetLogger().init(log_dir);
-    GetLogger().writef("Manager process started with instance_id: %d", instance_id);
-    GetLogger().writef("Manager process started");
+    GetLogger().Init(log_dir);
+    GetLogger().Writef("Manager process started with instance_id: %d", instance_id);
+    GetLogger().Writef("Manager process started");
     if (!config_result) {
-        GetLogger().writef("Failed to load config file, using default settings");
+        GetLogger().Writef("Failed to load config file, using default settings");
     }
 }
 
 // 初始化worker信息
 std::map<int, WorkerInfo> InitWorkers() {
     // 获取worker数量，默认值为2
-    int worker_count = GetConfig().get_int("worker.count", 2);
-    GetLogger().writef("Worker count configured: %d", worker_count);
+    int worker_count = GetConfig().GetInt("worker.count", 2);
+    GetLogger().Writef("Worker count configured: %d", worker_count);
     
     // 存储worker信息
     std::map<int, WorkerInfo> workers;
@@ -89,18 +89,18 @@ void StartWorker(WorkerInfo& info) {
             std::string worker_id_str = std::to_string(info.id);
             execlp("/opt/cmpf/bin/cmpf_main", "cmpf_main", "worker", worker_id_str.c_str(), nullptr);
             // 如果execlp返回，说明出错了
-            GetLogger().writef("Failed to start worker %d", info.id);
+            GetLogger().Writef("Failed to start worker %d", info.id);
             exit(1);
         } else if (pid > 0) {
             // 父进程 - 记录worker PID
             info.pid = pid;
             info.running = true;
-            GetLogger().writef("Started worker %d with PID: %d", info.id, pid);
+            GetLogger().Writef("Started worker %d with PID: %d", info.id, pid);
         } else {
             // fork失败
-            GetLogger().writef("Failed to fork worker %d", info.id);
+            GetLogger().Writef("Failed to fork worker %d", info.id);
             info.fail_count++;
-            GetLogger().writef("Worker %d failed to start, fail count: %d", info.id, info.fail_count);
+            GetLogger().Writef("Worker %d failed to start, fail count: %d", info.id, info.fail_count);
         }
     }
 }
@@ -116,11 +116,11 @@ void CheckWorkerStatus(std::map<int, WorkerInfo>& workers) {
             if (info.pid == pid) {
                 info.running = false;
                 info.fail_count++;
-                GetLogger().writef("Worker %d (PID: %d) exited with status: %d, fail count: %d", 
+                GetLogger().Writef("Worker %d (PID: %d) exited with status: %d, fail count: %d", 
                               info.id, pid, status, info.fail_count);
                 
                 if (info.fail_count >= 15) {
-                    GetLogger().writef("Worker %d has failed %d times, stopping attempts", 
+                    GetLogger().Writef("Worker %d has failed %d times, stopping attempts", 
                                   info.id, info.fail_count);
                 }
                 break;
@@ -141,7 +141,7 @@ void ManagerMainLoop(int instance_id) {
     sd_notify(0, "READY=1");
     
     // 进入主循环
-    GetLogger().writef("Manager entering main loop");
+    GetLogger().Writef("Manager entering main loop");
     while (true) {
         // 检查并启动/重启worker
         for (auto& pair : workers) {

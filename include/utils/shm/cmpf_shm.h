@@ -1,5 +1,5 @@
-#ifndef CMPF_UTILS_SHM_H_
-#define CMPF_UTILS_SHM_H_
+#ifndef CMPF_INCLUDE_UTILS_SHM_CMPF_SHM_H_
+#define CMPF_INCLUDE_UTILS_SHM_CMPF_SHM_H_
 
 namespace cmpf {
 
@@ -8,4 +8,4 @@ void ShmStub();
 
 } // namespace cmpf
 
-#endif // CMPF_UTILS_SHM_H_
+#endif // CMPF_INCLUDE_UTILS_SHM_CMPF_SHM_H_
