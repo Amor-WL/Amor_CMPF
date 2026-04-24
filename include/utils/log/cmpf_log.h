@@ -3,6 +3,12 @@
 
 #include <cstdio>
 
+// 日志缓冲区分级大小定义
+#define CMPF_LOG_BUFFER_LOW     256
+#define CMPF_LOG_BUFFER_MIDDLE  512
+#define CMPF_LOG_BUFFER_HIGH    1024
+#define CMPF_LOG_BUFFER_HUGE    4096
+
 namespace cmpf {
 
 class Logger {
@@ -26,7 +32,5 @@ Logger& GetLogger();
 void LogStub();
 
 } // namespace cmpf
-
-// 这里可以添加未来的日志模块声明
 
 #endif // CMPF_INCLUDE_UTILS_LOG_CMPF_LOG_H_

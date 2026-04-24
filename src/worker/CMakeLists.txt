@@ -19,7 +19,6 @@ target_include_directories(${LIBRARY_NAME} PRIVATE
 # 链接依赖库
 target_link_libraries(${LIBRARY_NAME} PRIVATE
     cmpf_core
-    cmpf_process
     cmpf_utils
     dl
     systemd

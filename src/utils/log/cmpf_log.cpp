@@ -36,7 +36,7 @@ void Logger::Init(const char* log_dir) {
     if (stat(log_dir, &st) == -1) {
         if (mkdir(log_dir, 0755) == -1) {
             // 避免使用流输出
-            char error_msg[256];
+            char error_msg[CMPF_LOG_BUFFER_MIDDLE];
             snprintf(error_msg, sizeof(error_msg), "Failed to create log directory: %s\n", log_dir);
             Write(error_msg);
             return;
@@ -47,11 +47,11 @@ void Logger::Init(const char* log_dir) {
     pid_t pid = getpid();
     
     // 获取进程名
-    char process_name[256];
+    char process_name[CMPF_LOG_BUFFER_LOW];
     snprintf(process_name, sizeof(process_name), "/proc/%d/comm", pid);
     
     FILE* comm_file = fopen(process_name, "r");
-    char name[256] = "unknown";
+    char name[CMPF_LOG_BUFFER_LOW] = "unknown";
     if (comm_file != nullptr) {
         if (fscanf(comm_file, "%s", name) != 1) {
             strncpy(name, "unknown", sizeof(name));
@@ -60,7 +60,7 @@ void Logger::Init(const char* log_dir) {
     }
     
     // 创建日志文件名
-    char log_filename[256];
+    char log_filename[CMPF_LOG_BUFFER_MIDDLE];
     snprintf(log_filename, sizeof(log_filename), "%s/%d_%s.log", log_dir, pid, name);
     
     // 打开日志文件
@@ -76,7 +76,7 @@ void Logger::Init(const char* log_dir) {
         initialized_ = true;
     } else {
         // 避免使用流输出
-        char error_msg[512];
+        char error_msg[CMPF_LOG_BUFFER_HIGH];
         snprintf(error_msg, sizeof(error_msg), "Failed to open log file: %s\n", log_filename);
         Write(error_msg);
     }

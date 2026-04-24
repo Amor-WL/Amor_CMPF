@@ -13,7 +13,6 @@
 // limitations under the License.
 
 #include "core/cmpf_core.h"
-#include "process/cmpf_process.h"
 #include "utils/config/cmpf_config.h"
 #include "utils/log/cmpf_log.h"
 
