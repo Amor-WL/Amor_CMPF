@@ -22,7 +22,14 @@ description: 指导如何在 WSL Ubuntu 环境中编译和测试 CMPF（Common M
 
 1. **WSL Ubuntu 环境**：确保已安装并配置好 WSL Ubuntu 22.04
 2. **用户权限**：确保当前用户为 amor
-3. **依赖项**：确保安装了必要的编译工具（CMake 3.22.1、g++ 11.3.0、make 等）
+3. **编译工具依赖**：确保安装了必要的编译工具
+   ```bash
+   sudo apt update && sudo apt install -y cmake make g++ libsystemd-dev
+   ```
+   - CMake 3.22.1+
+   - g++ 11.3.0+
+   - make
+   - libsystemd-dev（systemd开发库，必需依赖）
 4. **项目目录**：确保当前工作目录在 `Amor_CMPF` 目录下
 
 ### 编译步骤
@@ -158,7 +165,35 @@ sudo systemctl enable cmpf_manager.service
 - 可以手动创建部署目录：`mkdir -p run_space`
 - 或者在执行编译命令前先创建目录：`mkdir -p run_space && ./build_linux.sh -d ./run_space`
 
-#### 问题 2：编译失败
+#### 问题 2：编译失败 - 链接错找不到库
+
+**症状**：编译过程中出现类似以下错误：
+```
+/usr/bin/ld: cannot find -lcmpf_log: No such file or directory
+/usr/bin/ld: cannot find -lcmpf_memory: No such file or directory
+```
+
+**解决方案**：
+- 这是因为模块重构后，CMakeLists.txt 依赖引用未更新
+- `log` 和 `memory` 功能已合并到 `utils` 模块中，需要删除这些不存在的依赖引用
+- 确保 [process/CMakeLists.txt](src/process/CMakeLists.txt) 中只保留 `cmpf_core` 依赖
+
+#### 问题 3：编译失败 - 缺少 systemd 头文件
+
+**症状**：编译过程中出现以下错误：
+```
+fatal error: systemd/sd-daemon.h: No such file or directory
+compilation terminated.
+```
+
+**解决方案**：
+- 缺少 libsystemd 开发库
+- 执行以下命令安装：
+  ```bash
+  sudo apt install -y libsystemd-dev
+  ```
+
+#### 问题 4：编译失败 - 其他原因
 
 **症状**：编译过程中出现语法错误或其他编译错误
 
@@ -168,7 +203,7 @@ sudo systemctl enable cmpf_manager.service
 - 确保 WSL 环境有足够的权限
 - 确保安装了所有必要的依赖库
 
-#### 问题 3：测试执行失败
+#### 问题 5：测试执行失败
 
 **症状**：编译成功但测试执行失败
 
@@ -177,15 +212,18 @@ sudo systemctl enable cmpf_manager.service
 - 确保 LD_LIBRARY_PATH 环境变量设置正确
 - 查看测试日志中的具体错误信息
 
-#### 问题 4：服务启动失败 - 权限问题
+#### 问题 6：服务启动失败 - 权限问题
 
-**症状**：执行 `start_service.sh` 时出现 "command not found" 或 "需要root权限执行此脚本" 错误
+**症状**：执行 `start_service.sh` 时出现 "command not found" 或 "permission denied" 错误
 
 **解决方案**：
-- 确保脚本有执行权限：`chmod +x start_service.sh`
+- 部署后脚本默认没有执行权限，需要手动添加：
+  ```bash
+  chmod +x start_service.sh
+  ```
 - 使用 sudo 执行脚本：`sudo ./start_service.sh`
 
-#### 问题 5：服务启动失败 - 服务文件路径问题
+#### 问题 7：服务启动失败 - 服务文件路径问题
 
 **症状**：执行 `start_service.sh` 时出现 "cannot stat './cmpf_manager.service': No such file or directory" 错误
 
@@ -193,7 +231,7 @@ sudo systemctl enable cmpf_manager.service
 - 确保服务文件存在于 `run_space/service/` 目录中
 - 检查 `start_service.sh` 脚本中的 `SERVICE_DIR` 变量是否正确设置为 `$SCRIPT_DIR/service`
 
-#### 问题 6：服务启动失败 - systemd 配置错误
+#### 问题 8：服务启动失败 - systemd 配置错误
 
 **症状**：执行 `start_service.sh` 后出现 "Unit cmpf_manager.service has a bad unit file setting" 错误
 
@@ -203,10 +241,10 @@ sudo systemctl enable cmpf_manager.service
 - 正确的配置示例：
   ```
   Environment=LD_LIBRARY_PATH=/opt/cmpf/lib
-  ExecStart=/opt/cmpf/bin/manager
+  ExecStart=/opt/cmpf/bin/cmpf_main manager
   ```
 
-#### 问题 7：服务启动失败 - 其他原因
+#### 问题 9：服务启动失败 - 其他原因
 
 **症状**：执行 `start_service.sh` 后服务无法正常启动
 
@@ -223,7 +261,7 @@ sudo systemctl enable cmpf_manager.service
 
 ```bash
 # 进入项目目录
-cd /home/amor/code/cmpf_dev_2/Amor_CMPF
+cd /path/to/Amor_CMPF
 
 # 清理构建目录
 ./build_linux.sh -C
@@ -276,11 +314,14 @@ ls -la build/output/
 ```
 build/output/
 ├── bin/
-│   ├── manager
-│   ├── worker
+│   ├── cmpf_main (统一二进制入口)
 │   ├── test_cmpf (如果编译了测试)
 ├── lib/
-│   ├── libcmpf_xxx.so (各种模块动态链接文件)
+│   ├── libcmpf_core.so
+│   ├── libcmpf_process.so
+│   ├── libcmpf_utils.so
+│   ├── libcmpf_manager.so
+│   ├── libcmpf_worker.so (各种模块动态链接文件)
 ```
 
 部署后，文件会复制到指定的部署目录，结构如下：
@@ -288,12 +329,15 @@ build/output/
 ```
 run_space/
 ├── bin/
-│   ├── manager
-│   ├── worker
+│   ├── cmpf_main (统一二进制入口)
 ├── service/
 │   ├── cmpf_manager.service
 ├── lib/
-│   ├── libcmpf_xxx.so
+│   ├── libcmpf_core.so
+│   ├── libcmpf_process.so
+│   ├── libcmpf_utils.so
+│   ├── libcmpf_manager.so
+│   ├── libcmpf_worker.so
 ├── start_service.sh
 ├── cmpf.conf (配置文件)
 ```
@@ -307,6 +351,5 @@ run_space/
 ls -la build/output/bin/
 
 # 查看可执行文件信息
-file build/output/bin/manager
-file build/output/bin/worker
+file build/output/bin/cmpf_main
 ```

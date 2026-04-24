@@ -21,7 +21,6 @@ include_directories(include)
 
 # 添加各模块子目录
 add_subdirectory(src/core)
-add_subdirectory(src/process)
 add_subdirectory(src/utils)
 add_subdirectory(src/manager)
 add_subdirectory(src/worker)
@@ -30,7 +29,7 @@ add_subdirectory(src/worker)
 add_subdirectory(src/main)
 
 # 安装规则
-install(TARGETS cmpf_core cmpf_process cmpf_utils cmpf_manager cmpf_worker cmpf_main
+install(TARGETS cmpf_core cmpf_utils cmpf_manager cmpf_worker cmpf_main
     RUNTIME DESTINATION bin
     LIBRARY DESTINATION lib
     ARCHIVE DESTINATION lib

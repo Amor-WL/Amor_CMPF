@@ -13,56 +13,70 @@
 // limitations under the License.
 
 #include "core/cmpf_core.h"
-#include "process/cmpf_process.h"
 #include "utils/config/cmpf_config.h"
 #include "utils/log/cmpf_log.h"
 
 #include <sys/epoll.h>
 #include <unistd.h>
+#include <cstdlib>
+#include <sys/wait.h>
 #include <systemd/sd-daemon.h>
 #include <vector>
 #include <string>
-#include <cstdlib>
-#include <sys/wait.h>
 #include <map>
 #include <iostream>
 
 namespace cmpf {
+
+// worker最大失败次数（全局配置）
+static int g_worker_max_fail_count = 15;
+
+// worker连续失败重置时间（分钟，全局配置）
+// 两次退出间隔超过此时间，则不视为连续失败，失败次数重置
+static int g_worker_reset_fail_interval_minutes = 30;
 
 // 定义worker状态结构
 struct WorkerInfo {
     int id;
     pid_t pid;
     int fail_count;
+    time_t last_exit_time;  // 上次退出时间，用于判断是否为连续失败
     bool running;
 };
+
+// 处理worker进程退出，判断是否为连续失败
+void HandleWorkerExit(WorkerInfo& info, pid_t pid, int status);
 
 // 初始化配置和日志
 void InitSystem(int instance_id) {
     // 加载配置文件
-    bool config_result = GetConfig().init("/opt/cmpf/config/cmpf.conf");
+    bool config_result = GetConfig().Init("/opt/cmpf/config/cmpf.conf");
     if (!config_result) {
-        GetLogger().write("Failed to load config file, using default settings");
+        GetLogger().Write("Failed to load config file, using default settings");
     }
     
     // 读取日志目录配置
-    std::string log_dir_str = GetConfig().get_string("manager.log.dir", "log");
+    std::string log_dir_str = GetConfig().GetString("manager.log.dir", "log");
     const char* log_dir = log_dir_str.c_str();
     
     // 初始化日志
-    GetLogger().init(log_dir);
-    GetLogger().writef("Manager process started with instance_id: %d", instance_id);
-    GetLogger().writef("Manager process started");
-    if (!config_result) {
-        GetLogger().writef("Failed to load config file, using default settings");
-    }
+    GetLogger().Init(log_dir);
+    GetLogger().Writef("Manager process started with instance_id: %d", instance_id);
 }
 
 // 初始化worker信息
 std::map<int, WorkerInfo> InitWorkers() {
-    // 获取worker数量，默认值为2
-    int worker_count = GetConfig().get_int("worker.count", 2);
-    GetLogger().writef("Worker count configured: %d", worker_count);
+    // 获取worker数量
+    int worker_count = GetConfig().GetInt("worker.count", 2);
+    GetLogger().Writef("Worker count configured: %d", worker_count);
+    
+    // 获取最大失败次数配置
+    g_worker_max_fail_count = GetConfig().GetInt("worker.max_fail_count", 15);
+    GetLogger().Writef("Worker max fail count configured: %d", g_worker_max_fail_count);
+    
+    // 获取连续失败重置时间配置
+    g_worker_reset_fail_interval_minutes = GetConfig().GetInt("worker.reset_fail_interval_minutes", 30);
+    GetLogger().Writef("Worker reset fail interval configured: %d minutes", g_worker_reset_fail_interval_minutes);
     
     // 存储worker信息
     std::map<int, WorkerInfo> workers;
@@ -73,6 +87,7 @@ std::map<int, WorkerInfo> InitWorkers() {
         info.id = i;
         info.pid = 0;
         info.fail_count = 0;
+        info.last_exit_time = 0;
         info.running = false;
         workers[i] = info;
     }
@@ -80,33 +95,71 @@ std::map<int, WorkerInfo> InitWorkers() {
     return workers;
 }
 
+// 处理worker进程退出，判断是否为连续失败
+void HandleWorkerExit(WorkerInfo& info, pid_t pid, int status) {
+    info.running = false;
+    // 判断是否为连续失败
+    time_t now = time(nullptr);
+    if (info.last_exit_time != 0) {
+        // 计算两次退出的时间差（秒）
+        int diff_seconds = static_cast<int>(now - info.last_exit_time);
+        int threshold_seconds = g_worker_reset_fail_interval_minutes * 60;
+        
+        if (diff_seconds > threshold_seconds) {
+            // 间隔太长，重置失败次数
+            info.fail_count = 1;
+            GetLogger().Writef("Worker %d (PID: %d) exited status: %d, after %d min (%d min threshold), reset fail count: %d/%d", 
+                          info.id, pid, status, diff_seconds / 60, g_worker_reset_fail_interval_minutes,
+                          info.fail_count, g_worker_max_fail_count);
+        } else {
+            // 连续失败，计数加1
+            info.fail_count++;
+            GetLogger().Writef("Worker %d (PID: %d) exited status: %d, after %d sec (consecutive), fail count: %d/%d", 
+                          info.id, pid, status, diff_seconds, info.fail_count, g_worker_max_fail_count);
+        }
+    } else {
+        // 第一次退出
+        info.fail_count = 1;
+        GetLogger().Writef("Worker %d (PID: %d) exited status: %d, first exit, fail count: %d/%d", 
+                      info.id, pid, status, info.fail_count, g_worker_max_fail_count);
+    }
+    
+    // 更新上次退出时间
+    info.last_exit_time = now;
+    
+    if (info.fail_count >= g_worker_max_fail_count) {
+        GetLogger().Writef("Worker %d has failed %d times (max: %d), stopping attempts", 
+                      info.id, info.fail_count, g_worker_max_fail_count);
+    }
+}
+
 // 启动或重启worker进程
 void StartWorker(WorkerInfo& info) {
-    if (!info.running && info.fail_count < 15) {
+    if (!info.running && info.fail_count < g_worker_max_fail_count) {
         pid_t pid = fork();
         if (pid == 0) {
             // 子进程 - 启动worker
             std::string worker_id_str = std::to_string(info.id);
             execlp("/opt/cmpf/bin/cmpf_main", "cmpf_main", "worker", worker_id_str.c_str(), nullptr);
             // 如果execlp返回，说明出错了
-            GetLogger().writef("Failed to start worker %d", info.id);
+            GetLogger().Writef("Failed to start worker %d", info.id);
             exit(1);
         } else if (pid > 0) {
             // 父进程 - 记录worker PID
             info.pid = pid;
             info.running = true;
-            GetLogger().writef("Started worker %d with PID: %d", info.id, pid);
+            GetLogger().Writef("Started worker %d with PID: %d", info.id, pid);
         } else {
             // fork失败
-            GetLogger().writef("Failed to fork worker %d", info.id);
+            GetLogger().Writef("Failed to fork worker %d", info.id);
             info.fail_count++;
-            GetLogger().writef("Worker %d failed to start, fail count: %d", info.id, info.fail_count);
+            GetLogger().Writef("Worker %d failed to start, fail count: %d", info.id, info.fail_count);
         }
     }
 }
 
 // 检查worker进程状态
-void CheckWorkerStatus(std::map<int, WorkerInfo>& workers) {
+bool CheckWorkerStatus(std::map<int, WorkerInfo>& workers) {
     int status;
     pid_t pid = waitpid(-1, &status, WNOHANG);
     if (pid > 0) {
@@ -114,19 +167,13 @@ void CheckWorkerStatus(std::map<int, WorkerInfo>& workers) {
         for (auto& pair : workers) {
             WorkerInfo& info = pair.second;
             if (info.pid == pid) {
-                info.running = false;
-                info.fail_count++;
-                GetLogger().writef("Worker %d (PID: %d) exited with status: %d, fail count: %d", 
-                              info.id, pid, status, info.fail_count);
-                
-                if (info.fail_count >= 15) {
-                    GetLogger().writef("Worker %d has failed %d times, stopping attempts", 
-                                  info.id, info.fail_count);
-                }
+                HandleWorkerExit(info, pid, status);
                 break;
             }
         }
+        return true;
     }
+    return false;
 }
 
 // manager主循环
@@ -141,7 +188,7 @@ void ManagerMainLoop(int instance_id) {
     sd_notify(0, "READY=1");
     
     // 进入主循环
-    GetLogger().writef("Manager entering main loop");
+    GetLogger().Writef("Manager entering main loop");
     while (true) {
         // 检查并启动/重启worker
         for (auto& pair : workers) {
@@ -150,10 +197,13 @@ void ManagerMainLoop(int instance_id) {
         }
         
         // 检查worker进程状态
-        CheckWorkerStatus(workers);
+        bool has_event = CheckWorkerStatus(workers);
         
-        // 短暂睡眠，避免CPU占用过高
-        usleep(100000); // 100ms
+        // 如果有进程退出事件，不sleep，直接继续下一轮检查
+        // 避免大量进程同时退出时处理不过来
+        if (!has_event) {
+            usleep(100000); // 100ms
+        }
     }
 }
 

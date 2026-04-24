@@ -13,7 +13,6 @@
 // limitations under the License.
 
 #include "core/cmpf_core.h"
-#include "process/cmpf_process.h"
 #include "utils/config/cmpf_config.h"
 #include "utils/log/cmpf_log.h"
 
@@ -27,21 +26,21 @@ namespace cmpf {
 // worker主循环
 void WorkerMainLoop(int instance_id) {
     // 加载配置文件
-    bool config_result = GetConfig().init("/opt/cmpf/config/cmpf.conf");
+    bool config_result = GetConfig().Init("/opt/cmpf/config/cmpf.conf");
     if (!config_result) {
-        GetLogger().write("Failed to load config file, using default settings");
+        GetLogger().Write("Failed to load config file, using default settings");
     }
     
     // 读取日志目录配置
-    std::string log_dir_str = GetConfig().get_string("worker.log.dir", "log");
+    std::string log_dir_str = GetConfig().GetString("worker.log.dir", "log");
     const char* log_dir = log_dir_str.c_str();
     
     // 初始化日志
-    GetLogger().init(log_dir);
-    GetLogger().writef("Worker process started with instance_id: %d", instance_id);
-    GetLogger().writef("Worker process started");
+    GetLogger().Init(log_dir);
+    GetLogger().Writef("Worker process started with instance_id: %d", instance_id);
+    GetLogger().Writef("Worker process started");
     if (!config_result) {
-        GetLogger().writef("Failed to load config file, using default settings");
+        GetLogger().Writef("Failed to load config file, using default settings");
     }
     
     // 通知systemd服务已启动
@@ -50,7 +49,7 @@ void WorkerMainLoop(int instance_id) {
     // 创建epoll实例
     int epoll_fd = epoll_create1(0);
     if (epoll_fd == -1) {
-        GetLogger().writef("Failed to create epoll instance");
+        GetLogger().Writef("Failed to create epoll instance");
         return;
     }
     
@@ -58,11 +57,11 @@ void WorkerMainLoop(int instance_id) {
     struct epoll_event events[10];
     
     // 进入epoll循环，阻塞等待事件
-    GetLogger().writef("Worker entering epoll loop");
+    GetLogger().Writef("Worker entering epoll loop");
     while (true) {
         int nfds = epoll_wait(epoll_fd, events, 10, -1);
         if (nfds == -1) {
-            GetLogger().writef("Epoll wait error");
+            GetLogger().Writef("Epoll wait error");
             break;
         }
         
@@ -72,7 +71,7 @@ void WorkerMainLoop(int instance_id) {
     // 关闭epoll
     close(epoll_fd);
     
-    GetLogger().writef("Worker process exiting");
+    GetLogger().Writef("Worker process exiting");
 }
 
 } // namespace cmpf
