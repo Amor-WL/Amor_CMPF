@@ -42,7 +42,6 @@ private:
     bool StartBusinessThreads();
 };
 
-// 全局函数，方便调用
 bool InitAndStartCore(const std::string& process_name);
 bool InitAndStartCore(const std::string& process_name, int instance_id);
 void RegisterThread(const std::string& module_name, const std::string& thread_name, int priority, std::function<void()> func);
