@@ -12,42 +12,45 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "core/cmpf_core.h"
-#include <iostream>
 #include <cstdlib>
+#include <iostream>
+#include <string>
+
 #include <unistd.h>
+
+#include "core/cmpf_core.h"
 
 int main(int argc, char* argv[]) {
     // 解析命令行参数
     std::string instance_type = "manager"; // 默认类型
     int instance_id = 0; // 默认ID
-    
+
     if (argc > 1) {
         instance_type = argv[1];
     }
-    
+
     if (argc > 2) {
         instance_id = std::atoi(argv[2]);
     }
-    
-    std::cout << "Starting CMPF process with type: " << instance_type 
+
+    std::cout << "Starting CMPF process with type: " << instance_type
               << ", id: " << instance_id << std::endl;
-    
+
     // 初始化并启动核心流程
     if (!cmpf::InitAndStartCore(instance_type, instance_id)) {
         std::cout << "Failed to initialize and start core process" << std::endl;
         return 1;
     }
-    
+
     // 进入主循环，保持进程运行
-    std::cout << "CMPF process " << instance_type << " (id: " << instance_id 
+    std::cout << "CMPF process " << instance_type << " (id: " << instance_id
               << ") started successfully, entering main loop" << std::endl;
-    
+
     while (true) {
         // 无限循环，保持进程运行
         // 实际业务逻辑由加载的模块中的线程处理
         sleep(1);
     }
-    
+
     return 0;
 }

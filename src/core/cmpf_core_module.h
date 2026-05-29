@@ -24,31 +24,30 @@ typedef struct {
 
 // 模块基类
 class Module {
-public:
+ public:
+    explicit Module(const std::string& name, void* handle);
+
     virtual ~Module();
-    
+
     // 初始化模块
-    virtual bool init();
-    
+    virtual bool Init();
+
     // 销毁模块
-    virtual void destroy();
-    
+    virtual void Destroy();
+
     // 获取模块名称
     const std::string& name() const;
-    
+
     // 获取模块句柄
     void* handle() const;
-    
+
     // 添加线程
-    void addThread(const ThreadInfo& thread);
-    
+    void AddThread(const ThreadInfo& thread);
+
     // 获取线程列表
     const std::vector<ThreadInfo>& threads() const;
 
-public:
-    Module(const std::string& name, void* handle = nullptr);
-
-private:
+ private:
     std::string name_;
     void* handle_;
     std::vector<ThreadInfo> threads_;
@@ -56,37 +55,40 @@ private:
 
 // 模块管理器
 class ModuleManager {
-public:
-    static ModuleManager& instance();
-    
+ public:
+    static ModuleManager& Instance();
+
     // 加载单个模块
-    bool loadModule(const std::string& so_path);
-    
+    bool LoadModule(const std::string& so_path);
+
     // 从目录加载模块
-    bool loadModulesFromDirectory(const std::string& directory);
-    
+    bool LoadModulesFromDirectory(const std::string& directory);
+
     // 获取所有模块
     const std::vector<std::shared_ptr<Module>>& modules() const;
 
     // 注册线程
-    void RegisterThread(const std::string& module_name, const std::string& thread_name, int priority, std::function<void()> func);
+    void RegisterThread(const std::string& module_name,
+                        const std::string& thread_name,
+                        int priority,
+                        std::function<void()> func);
 
-private:
+ private:
     ModuleManager();
     ~ModuleManager();
-    
+
     std::vector<std::shared_ptr<Module>> modules_;
 };
 
 // 线程管理器
 class ThreadManager {
-public:
-    static ThreadManager& instance();
-    
-    // 启动所有注册的业务线程
-    bool startBusinessThreads();
+ public:
+    static ThreadManager& Instance();
 
-private:
+    // 启动所有注册的业务线程
+    bool StartBusinessThreads();
+
+ private:
     ThreadManager();
 };
 

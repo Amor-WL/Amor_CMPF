@@ -2,8 +2,7 @@
 
 namespace cmpf {
 
-void ShmStub()
-{
+void ShmStub() {
     return;
 }
 

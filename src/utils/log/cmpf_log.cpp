@@ -1,4 +1,5 @@
 #include "utils/log/cmpf_log.h"
+
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
@@ -35,34 +36,35 @@ void Logger::Init(const char* log_dir) {
     struct stat st;
     if (stat(log_dir, &st) == -1) {
         if (mkdir(log_dir, 0755) == -1) {
-            // 避免使用流输出
-            char error_msg[CMPF_LOG_BUFFER_MIDDLE];
-            snprintf(error_msg, sizeof(error_msg), "Failed to create log directory: %s\n", log_dir);
+            char error_msg[kCmpfLogBufferMiddle];
+            snprintf(error_msg, sizeof(error_msg),
+                     "Failed to create log directory: %s\n", log_dir);
             Write(error_msg);
             return;
         }
     }
-    
+
     // 获取pid
     pid_t pid = getpid();
-    
+
     // 获取进程名
-    char process_name[CMPF_LOG_BUFFER_LOW];
+    char process_name[kCmpfLogBufferLow];
     snprintf(process_name, sizeof(process_name), "/proc/%d/comm", pid);
-    
+
     FILE* comm_file = fopen(process_name, "r");
-    char name[CMPF_LOG_BUFFER_LOW] = "unknown";
+    char name[kCmpfLogBufferLow] = "unknown";
     if (comm_file != nullptr) {
         if (fscanf(comm_file, "%s", name) != 1) {
             strncpy(name, "unknown", sizeof(name));
         }
         fclose(comm_file);
     }
-    
+
     // 创建日志文件名
-    char log_filename[CMPF_LOG_BUFFER_MIDDLE];
-    snprintf(log_filename, sizeof(log_filename), "%s/%d_%s.log", log_dir, pid, name);
-    
+    char log_filename[kCmpfLogBufferMiddle];
+    snprintf(log_filename, sizeof(log_filename),
+             "%s/%d_%s.log", log_dir, pid, name);
+
     // 打开日志文件
     file_ = fopen(log_filename, "a");
     if (file_ != nullptr) {
@@ -71,23 +73,24 @@ void Logger::Init(const char* log_dir) {
         struct tm tstruct = *localtime(&now);
         char time_str[80];
         strftime(time_str, sizeof(time_str), "%Y-%m-%d %H:%M:%S", &tstruct);
-        fprintf(file_, "[%s] Log initialized for process %d (%s) in directory %s\n", time_str, pid, name, log_dir);
+        fprintf(file_,
+                "[%s] Log initialized for process %d (%s) in directory %s\n",
+                time_str, pid, name, log_dir);
         fflush(file_);
         initialized_ = true;
     } else {
-        // 避免使用流输出
-        char error_msg[CMPF_LOG_BUFFER_HIGH];
-        snprintf(error_msg, sizeof(error_msg), "Failed to open log file: %s\n", log_filename);
+        char error_msg[kCmpfLogBufferHigh];
+        snprintf(error_msg, sizeof(error_msg),
+                 "Failed to open log file: %s\n", log_filename);
         Write(error_msg);
     }
 }
 
 void Logger::Write(const char* message) {
     if (!initialized_ || file_ == nullptr) {
-        // 避免使用流输出
         char error_msg[256];
-        snprintf(error_msg, sizeof(error_msg), "Logger not initialized, cannot write log: %s\n", message);
-        // 直接输出到标准错误
+        snprintf(error_msg, sizeof(error_msg),
+                 "Logger not initialized, cannot write log: %s\n", message);
         fprintf(stderr, "%s", error_msg);
         return;
     }
@@ -105,7 +108,6 @@ void Logger::Writef(const char* format, ...) {
     if (!initialized_ || file_ == nullptr) {
         va_list args;
         va_start(args, format);
-        // 避免使用流输出
         fprintf(stderr, "Logger not initialized, cannot write log: ");
         vfprintf(stderr, format, args);
         fprintf(stderr, "\n");
@@ -131,7 +133,6 @@ Logger& GetLogger() {
 }
 
 void LogStub() {
-    // 避免使用流输出
     GetLogger().Write("cmpf_log stub");
     return;
 }

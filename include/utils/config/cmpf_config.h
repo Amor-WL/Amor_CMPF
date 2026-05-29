@@ -7,25 +7,29 @@
 namespace cmpf {
 
 class CmpfConfig {
-public:
+ public:
     CmpfConfig();
     ~CmpfConfig();
-    
+
     // 初始化配置
     bool Init(const std::string& config_path);
-    
-    // 获取整数配置项，默认值为0
-    int GetInt(const std::string& key, int default_value = 0) const;
-    
-    // 获取字符串配置项，默认值为空字符串
-    std::string GetString(const std::string& key, const std::string& default_value = "") const;
-    
-    // 获取布尔配置项，默认值为false
-    bool GetBool(const std::string& key, bool default_value = false) const;
-    
-private:
+
+    // 获取整数配置项
+    int GetInt(const std::string& key) const;
+    int GetInt(const std::string& key, int default_value) const;
+
+    // 获取字符串配置项
+    std::string GetString(const std::string& key) const;
+    std::string GetString(const std::string& key,
+                          const std::string& default_value) const;
+
+    // 获取布尔配置项
+    bool GetBool(const std::string& key) const;
+    bool GetBool(const std::string& key, bool default_value) const;
+
+ private:
     std::unordered_map<std::string, std::string> config_;
-    
+
     // 解析配置文件
     bool ParseConfig(const std::string& config_path);
 };

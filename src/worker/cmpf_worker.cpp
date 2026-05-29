@@ -12,14 +12,16 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include <sys/epoll.h>
+#include <unistd.h>
+
+#include <iostream>
+
+#include <systemd/sd-daemon.h>
+
 #include "core/cmpf_core.h"
 #include "utils/config/cmpf_config.h"
 #include "utils/log/cmpf_log.h"
-
-#include <sys/epoll.h>
-#include <unistd.h>
-#include <systemd/sd-daemon.h>
-#include <iostream>
 
 namespace cmpf {
 
@@ -30,32 +32,34 @@ void WorkerMainLoop(int instance_id) {
     if (!config_result) {
         GetLogger().Write("Failed to load config file, using default settings");
     }
-    
+
     // 读取日志目录配置
     std::string log_dir_str = GetConfig().GetString("worker.log.dir", "log");
     const char* log_dir = log_dir_str.c_str();
-    
+
     // 初始化日志
     GetLogger().Init(log_dir);
-    GetLogger().Writef("Worker process started with instance_id: %d", instance_id);
+    GetLogger().Writef("Worker process started with instance_id: %d",
+                       instance_id);
     GetLogger().Writef("Worker process started");
     if (!config_result) {
-        GetLogger().Writef("Failed to load config file, using default settings");
+        GetLogger().Writef(
+            "Failed to load config file, using default settings");
     }
-    
+
     // 通知systemd服务已启动
     sd_notify(0, "READY=1");
-    
+
     // 创建epoll实例
     int epoll_fd = epoll_create1(0);
     if (epoll_fd == -1) {
         GetLogger().Writef("Failed to create epoll instance");
         return;
     }
-    
+
     // 注册信号处理（可选）
     struct epoll_event events[10];
-    
+
     // 进入epoll循环，阻塞等待事件
     GetLogger().Writef("Worker entering epoll loop");
     while (true) {
@@ -64,13 +68,13 @@ void WorkerMainLoop(int instance_id) {
             GetLogger().Writef("Epoll wait error");
             break;
         }
-        
+
         // 处理事件（目前为空，仅用于阻塞）
     }
-    
+
     // 关闭epoll
     close(epoll_fd);
-    
+
     GetLogger().Writef("Worker process exiting");
 }
 
@@ -79,7 +83,7 @@ void WorkerMainLoop(int instance_id) {
 // 模块初始化函数
 extern "C" void InitModule() {
     std::cout << "Initializing worker module" << std::endl;
-    
+
     // 注册worker主线程
     cmpf::RegisterThread("worker", "worker_main", 1, []() {
         // 传递默认实例ID 1

@@ -1,4 +1,5 @@
 #include "cmpf_core_module.h"
+
 #include <dlfcn.h>
 #include <dirent.h>
 #include <algorithm>
@@ -8,7 +9,7 @@
 namespace cmpf {
 
 // Module类实现
-Module::Module(const std::string& name, void* handle) 
+Module::Module(const std::string& name, void* handle)
     : name_(name), handle_(handle) {
 }
 
@@ -18,11 +19,11 @@ Module::~Module() {
     }
 }
 
-bool Module::init() {
+bool Module::Init() {
     return true;
 }
 
-void Module::destroy() {
+void Module::Destroy() {
     if (handle_) {
         dlclose(handle_);
         handle_ = nullptr;
@@ -37,7 +38,7 @@ void* Module::handle() const {
     return handle_;
 }
 
-void Module::addThread(const ThreadInfo& thread) {
+void Module::AddThread(const ThreadInfo& thread) {
     threads_.push_back(thread);
 }
 
@@ -51,24 +52,26 @@ ModuleManager::ModuleManager() {
 
 ModuleManager::~ModuleManager() {
     for (auto& module : modules_) {
-        module->destroy();
+        module->Destroy();
     }
 }
 
-ModuleManager& ModuleManager::instance() {
+ModuleManager& ModuleManager::Instance() {
     static ModuleManager instance;
     return instance;
 }
 
-bool ModuleManager::loadModule(const std::string& so_path) {
+bool ModuleManager::LoadModule(const std::string& so_path) {
     void* handle = dlopen(so_path.c_str(), RTLD_NOW);
     if (!handle) {
-        std::cout << "Failed to load module: " << so_path << ", error: " << dlerror() << std::endl;
+        std::cout << "Failed to load module: " << so_path
+                  << ", error: " << dlerror() << std::endl;
         return false;
     }
 
     // 尝试获取模块初始化函数
-    InitFunc init_func = (InitFunc)dlsym(handle, "InitModule");
+    InitFunc init_func = reinterpret_cast<InitFunc>(
+        dlsym(handle, "InitModule"));
     if (init_func) {
         init_func();
     }
@@ -79,17 +82,19 @@ bool ModuleManager::loadModule(const std::string& so_path) {
     if (module_name.substr(0, 3) == "lib") {
         module_name = module_name.substr(3);
     }
-    if (module_name.size() > 3 && module_name.substr(module_name.size() - 3) == ".so") {
+    if (module_name.size() > 3
+        && module_name.substr(module_name.size() - 3) == ".so") {
         module_name = module_name.substr(0, module_name.size() - 3);
     }
-    
+
     auto module = std::make_shared<Module>(module_name, handle);
     modules_.push_back(module);
-    std::cout << "Loaded module: " << module_name << " from: " << filename << std::endl;
+    std::cout << "Loaded module: " << module_name
+              << " from: " << filename << std::endl;
     return true;
 }
 
-bool ModuleManager::loadModulesFromDirectory(const std::string& directory) {
+bool ModuleManager::LoadModulesFromDirectory(const std::string& directory) {
     DIR* dir = opendir(directory.c_str());
     if (!dir) {
         std::cout << "Failed to open directory: " << directory << std::endl;
@@ -103,9 +108,10 @@ bool ModuleManager::loadModulesFromDirectory(const std::string& directory) {
             continue;
         }
 
-        if (filename.size() > 3 && filename.substr(filename.size() - 3) == ".so") {
+        if (filename.size() > 3
+            && filename.substr(filename.size() - 3) == ".so") {
             std::string so_path = directory + "/" + filename;
-            loadModule(so_path);
+            LoadModule(so_path);
         }
     }
 
@@ -117,7 +123,10 @@ const std::vector<std::shared_ptr<Module>>& ModuleManager::modules() const {
     return modules_;
 }
 
-void ModuleManager::RegisterThread(const std::string& module_name, const std::string& thread_name, int priority, std::function<void()> func) {
+void ModuleManager::RegisterThread(const std::string& module_name,
+                                   const std::string& thread_name,
+                                   int priority,
+                                   std::function<void()> func) {
     // 查找模块
     for (auto& module : modules_) {
         if (module->name() == module_name) {
@@ -125,8 +134,10 @@ void ModuleManager::RegisterThread(const std::string& module_name, const std::st
             thread.name = thread_name;
             thread.priority = priority;
             thread.func = func;
-            module->addThread(thread);
-            std::cout << "Registered thread: " << thread_name << " for module: " << module_name << " with priority: " << priority << std::endl;
+            module->AddThread(thread);
+            std::cout << "Registered thread: " << thread_name
+                      << " for module: " << module_name
+                      << " with priority: " << priority << std::endl;
             return;
         }
     }
@@ -137,37 +148,41 @@ void ModuleManager::RegisterThread(const std::string& module_name, const std::st
     thread.name = thread_name;
     thread.priority = priority;
     thread.func = func;
-    module->addThread(thread);
+    module->AddThread(thread);
     modules_.push_back(module);
-    std::cout << "Registered thread: " << thread_name << " for new module: " << module_name << " with priority: " << priority << std::endl;
+    std::cout << "Registered thread: " << thread_name
+              << " for new module: " << module_name
+              << " with priority: " << priority << std::endl;
 }
 
 // ThreadManager类实现
 ThreadManager::ThreadManager() {
 }
 
-ThreadManager& ThreadManager::instance() {
+ThreadManager& ThreadManager::Instance() {
     static ThreadManager instance;
     return instance;
 }
 
-bool ThreadManager::startBusinessThreads() {
+bool ThreadManager::StartBusinessThreads() {
     // 按优先级排序线程
     std::vector<ThreadInfo> all_threads;
-    for (const auto& module : ModuleManager::instance().modules()) {
+    for (const auto& module : ModuleManager::Instance().modules()) {
         for (const auto& thread : module->threads()) {
             all_threads.push_back(thread);
         }
     }
 
     // 按优先级排序
-    std::sort(all_threads.begin(), all_threads.end(), [](const ThreadInfo& a, const ThreadInfo& b) {
-        return a.priority < b.priority;
-    });
+    std::sort(all_threads.begin(), all_threads.end(),
+              [](const ThreadInfo& a, const ThreadInfo& b) {
+                  return a.priority < b.priority;
+              });
 
     // 启动线程
     for (const auto& thread : all_threads) {
-        std::cout << "Starting thread: " << thread.name << " with priority: " << thread.priority << std::endl;
+        std::cout << "Starting thread: " << thread.name
+                  << " with priority: " << thread.priority << std::endl;
         std::thread(thread.func).detach();
     }
 

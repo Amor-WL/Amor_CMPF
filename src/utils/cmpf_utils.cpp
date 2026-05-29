@@ -1,11 +1,12 @@
 #include "utils/cmpf_utils.h"
-#include "core/cmpf_core.h"
+
 #include <unistd.h>
+
+#include "core/cmpf_core.h"
 
 namespace cmpf {
 
-void UtilsStub()
-{
+void UtilsStub() {
     return;
 }
 

@@ -3,25 +3,25 @@
 
 #include <cstdio>
 
-// 日志缓冲区分级大小定义
-#define CMPF_LOG_BUFFER_LOW     256
-#define CMPF_LOG_BUFFER_MIDDLE  512
-#define CMPF_LOG_BUFFER_HIGH    1024
-#define CMPF_LOG_BUFFER_HUGE    4096
-
 namespace cmpf {
 
+// 日志缓冲区分级大小定义
+constexpr int kCmpfLogBufferLow = 256;
+constexpr int kCmpfLogBufferMiddle = 512;
+constexpr int kCmpfLogBufferHigh = 1024;
+constexpr int kCmpfLogBufferHuge = 4096;
+
 class Logger {
-public:
+ public:
     Logger();
     ~Logger();
-    
+
     void Init();
     void Init(const char* log_dir);
     void Write(const char* message);
     void Writef(const char* format, ...);
-    
-private:
+
+ private:
     bool initialized_;
     FILE* file_;
 };
